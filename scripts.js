@@ -176,9 +176,15 @@ function removeThumbnail(evt) {
 	if (typeof event.target.closest !== 'function') {
 		return;
 	}
-
-	
 	var element = event.target.closest('.column');
+	
+	currentCats = [];
+	
+	/\[(.*?)\]/g.exec(element.getAttribute("data-groups"))[1]
+			.split(",")
+			.map((item) => currentCats.push(/"(.+)"$/g.exec(item)[1]));
+		
+	console.log("currentCats: "+currentCats);
 	
 	if (element !== null) {
 		shuffleInstance.remove([element]);
@@ -196,15 +202,7 @@ function removeThumbnail(evt) {
 		localStorage.setObject("thumbnails", storedThumbnails);
 	}
 	
-	/*
-	currentCats = [];
-	
-	/\[(.*?)\]/g.exec(element.getAttribute("data-groups"))[1]
-			.split(",")
-			.map((item) => currentCats.push(/"(.+)"$/g.exec(item)[1]));
 		
-	console.log("currentCats: "+currentCats);
-	
 	shuffleInstance.element.childNodes.forEach(function(child){
 		if(child.nodeType != 3 && child.nodeType != 8){
 			/\[(.*?)\]/g.exec(child.getAttribute("data-groups"))[1]
@@ -212,7 +210,7 @@ function removeThumbnail(evt) {
 				.map((item) => currentCats.indexOf(/"(.+)"$/g.exec(item)[1]) === -1 ? 
 											(console.log(/"(.+)"$/g.exec(item)[1])):"");
 		}
-	});*/
+	});
 }
 
 // Filter the shuffle instance by items with a title that matches the search input.
