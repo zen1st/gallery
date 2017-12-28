@@ -1,108 +1,229 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <link rel="stylesheet" href="styles.css">
+<!--<link rel="stylesheet/less" type="text/css" href="style.less"/>-->
+<script src="//cdnjs.cloudflare.com/ajax/libs/less.js/2.7.2/less.min.js" type="text/javascript"></script>
+<script src="shuffle.js"></script>
+<script>
+class Thumbnail {
+	constructor(name, src, cat, desc){
+		this.id = Math.floor((Math.random() * 1000) + 1);
+		this.name = name;
+		this.src = src;
+		this.cat = cat;
+		this.desc = desc;
+		
+		this.html = document.createElement('div');
+		this.html.setAttribute('class', 'column');
+		var cats = JSON.stringify(cat.toString().split(",").map((item) => item.trim()));			
+		this.html.setAttribute('data-groups', `${cats}`);
+		this.html.setAttribute('data-title', name);
+		this.html.setAttribute('id', this.id);
+		this.html.innerHTML = `<div class="content">
+								<a href="#" class="close-classic" onclick="removeThumbnail(this)"></a>
+								<div class="imgContent"><div class="imgLoader"></div>
+								<img class="thumbnail" src=${src} alt="Car" style="width:100%" onload="loadImage(this)">
+								</div>
+								  <h4>${name}</h4>
+								  <p>${desc}</p>
+								</div>`;
+	}
+	
+	save(){	
+		var thumbnails;
+		if(localStorage.getObject("thumbnails")==null){
+			thumbnails = [];
+		}
+		else {
+			thumbnails = localStorage.getObject("thumbnails");
+		}
+		thumbnails.push(toJSON(this.html));	
+		localStorage.setObject("thumbnails", thumbnails);
+	}
+
+	getHtml(){
+		return this.html;
+	}
+}
+
+function toJSON(node) {
+  node = node || this;
+  var obj = {
+    nodeType: node.nodeType
+  };
+  if (node.tagName) {
+    obj.tagName = node.tagName.toLowerCase();
+  } else
+  if (node.nodeName) {
+    obj.nodeName = node.nodeName;
+  }
+  if (node.nodeValue) {
+    obj.nodeValue = node.nodeValue;
+  }
+  var attrs = node.attributes;
+  if (attrs) {
+    var length = attrs.length;
+    var arr = obj.attributes = new Array(length);
+    for (var i = 0; i < length; i++) {
+      attr = attrs[i];
+      arr[i] = [attr.nodeName, attr.nodeValue];
+    }
+  }
+  var childNodes = node.childNodes;
+  if (childNodes) {
+    length = childNodes.length;
+    arr = obj.childNodes = new Array(length);
+    for (i = 0; i < length; i++) {
+      arr[i] = toJSON(childNodes[i]);
+    }
+  }
+  return obj;
+}
+
+function toDOM(obj) {
+  if (typeof obj == 'string') {
+    obj = JSON.parse(obj);
+  }
+  var node, nodeType = obj.nodeType;
+  switch (nodeType) {
+    case 1: //ELEMENT_NODE
+      node = document.createElement(obj.tagName);
+      var attributes = obj.attributes || [];
+      for (var i = 0, len = attributes.length; i < len; i++) {
+        var attr = attributes[i];
+        node.setAttribute(attr[0], attr[1]);
+      }
+      break;
+    case 3: //TEXT_NODE
+      node = document.createTextNode(obj.nodeValue);
+      break;
+    case 8: //COMMENT_NODE
+      node = document.createComment(obj.nodeValue);
+      break;
+    case 9: //DOCUMENT_NODE
+      node = document.implementation.createDocument();
+      break;
+    case 10: //DOCUMENT_TYPE_NODE
+      node = document.implementation.createDocumentType(obj.nodeName);
+      break;
+    case 11: //DOCUMENT_FRAGMENT_NODE
+      node = document.createDocumentFragment();
+      break;
+    default:
+      return node;
+  }
+  if (nodeType == 1 || nodeType == 11) {
+    var childNodes = obj.childNodes || [];
+    for (i = 0, len = childNodes.length; i < len; i++) {
+      node.appendChild(toDOM(childNodes[i]));
+    }
+  }
+  return node;
+}
+
+class Checkbox 
+{
+	constructor(value)
+	{
+		this.value = value;
+		this.html = document.createElement('label');
+		this.html.setAttribute('class', 'container');
+		this.html.innerHTML = `${value} <input type="checkbox" value=${value} checked="checked" onclick="filterCat(this)">
+								<span class="checkmark"></span>
+								</label>`;
+	}
+}
+</script>
+<script src="scripts.js"></script>
 </head>
 <body>
 
 <div class="topnav">
-  <a class="active" href="#home">Home</a>
-  <a href="#about">About</a>
-  <a href="#contact">Contact</a>
+  <div class="container" onclick="toggleNav(this)">
+  <div class="bar1"></div>
+  <div class="bar2"></div>
+  <div class="bar3"></div>
+  </div>
+
+  <div id="navs">
+  <a href="#home" style="background-color:#0099ff">Home</a>
+  <a id="myModalBtn" href="#add">Add</a>
   <div class="search-container">
     <form action="/action_page.php">
-      <input type="text" placeholder="Search.." name="search">
+      <!--<input class="js-shuffle-search" type="text" placeholder="Search.." name="search">-->
+	  <input type="text" name="search" placeholder="Search.." onkeyup="handleSearchKeyup(this)">
       <button type="submit"><i class="fa fa-search"></i></button>
     </form>
   </div>
+  </div>
 </div>
 
-<!-- MAIN (Center website) -->
-<div class="main">
+<!-- The Modal -->
+<div id="myModal" class="modal">
 
-<h1>MYLOGO.COM</h1>
+  <!-- Modal content -->
+  <div class="modal-content">
+    <div class="modal-header">
+      <span class="close">&times;</span>
+      <h2>Make an Addition</h2>
+    </div>
+    <div class="modal-body">
+      <form id="addForm" name="addForm" onsubmit="return addThumbnail()">
+      <label for="name">Name: </label>
+      <input type="text" id="name" name="name" required minlength="3">
+
+      <label for="src">Image Source Link: </label>
+      <input type="text" id="src" name="src" required pattern="https?://.+" title="Include http://">
+
+      <label for="cat">Categories (separate them by ','): </label>
+      <input type="text" id="cat" name="cat" required minlength="3">
+
+      <label for="cat">Description: </label>
+      <textarea type="text" id="desc" name="desc" placeholder="Write something.." style="height:200px" required minlength="3"></textarea>
+
+      <div class="row">
+      <input type="submit" value="Submit">
+      </div>
+
+      </form>
+    </div>
+    <div class="modal-footer">
+      <h3></h3>
+    </div>
+  </div>
+</div>
+
+
+<div class="main" style="padding-left:16px">
+<br id="navGap"><br><br>
+<h1>Gallery</h1>
 <hr>
+<h2>A Pure CSS/JavaSCript Demo</h2>
 
-<h2>PORTFOLIO</h2>
-<input type="radio" onclick="filterSelection('all')" name="category" checked> Show all
-<input type="radio" onclick="filterSelection('nature')" name="category"> Nature
-<input type="radio" onclick="filterSelection('cars')" name="category"> Cars
-<input type="radio" onclick="filterSelection('people')" name="category"> People
+<div id="filterContainer">
+<!--
+<label class="container">All
+  <input type="checkbox" value="all" checked="checked" onclick="filterSelection(this)">
+  <span class="checkmark"></span>
+</label>
+-->
+</div>
+
+<div id="sortContainer">
+  <button class="btn" onclick="handleSortChange(true)">Alphabetical Order </button>
+  <button class="btn" onclick="handleSortChange(false)"> Reverse Alphabetical Order</button>
+</div>
 
 <!-- Portfolio Gallery Grid -->
-<div class="row">
-  <div class="column nature">
-    <div class="content">
-      <img src="/w3images/mountains.jpg" alt="Mountains" style="width:100%">
-      <h4>Mountains</h4>
-      <p>Lorem ipsum dolor..</p>
-    </div>
-  </div>
-  <div class="column nature">
-    <div class="content">
-    <img src="/w3images/lights.jpg" alt="Lights" style="width:100%">
-      <h4>Lights</h4>
-      <p>Lorem ipsum dolor..</p>
-    </div>
-  </div>
-  <div class="column nature">
-    <div class="content">
-    <img src="/w3images/nature.jpg" alt="Nature" style="width:100%">
-      <h4>Forest</h4>
-      <p>Lorem ipsum dolor..</p>
-    </div>
-  </div>
-  
-  <div class="column cars">
-    <div class="content">
-      <img src="/w3images/cars1.jpg" alt="Car" style="width:100%">
-      <h4>Retro</h4>
-      <p>Lorem ipsum dolor..</p>
-    </div>
-  </div>
-  <div class="column cars">
-    <div class="content">
-    <img src="/w3images/cars2.jpg" alt="Car" style="width:100%">
-      <h4>Fast</h4>
-      <p>Lorem ipsum dolor..</p>
-    </div>
-  </div>
-  <div class="column cars">
-    <div class="content">
-    <img src="/w3images/cars3.jpg" alt="Car" style="width:100%">
-      <h4>Classic</h4>
-      <p>Lorem ipsum dolor..</p>
-    </div>
-  </div>
-
-  <div class="column people">
-    <div class="content">
-      <img src="/w3images/people1.jpg" alt="Car" style="width:100%">
-      <h4>Girl</h4>
-      <p>Lorem ipsum dolor..</p>
-    </div>
-  </div>
-  <div class="column people">
-    <div class="content">
-    <img src="/w3images/people2.jpg" alt="Car" style="width:100%">
-      <h4>Man</h4>
-      <p>Lorem ipsum dolor..</p>
-    </div>
-  </div>
-  <div class="column people">
-    <div class="content">
-    <img src="/w3images/people3.jpg" alt="Car" style="width:100%">
-      <h4>Woman</h4>
-      <p>Lorem ipsum dolor..</p>
-    </div>
-  </div>
-<!-- END GRID -->
+<div class="row grid">
+<!--<div id="#sizer"></div>-->
 </div>
 
 <!-- END MAIN -->
 </div>
-
 <script src="scripts.js"></script>
 </body>
 </html>
