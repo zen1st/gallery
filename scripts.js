@@ -178,17 +178,11 @@ function removeThumbnail(evt) {
 	}
 	var element = event.target.closest('.column');
 	
-	currentCats = [];
-	
-	/\[(.*?)\]/g.exec(element.getAttribute("data-groups"))[1]
-			.split(",")
-			.map((item) => currentCats.push(/"(.+)"$/g.exec(item)[1]));
-		
-	console.log("currentCats: "+currentCats);
-	
 	if (element !== null) {
 		shuffleInstance.remove([element]);
 	}
+	
+	shuffleInstance.update();
   
 	if(localStorage.getObject("thumbnails") != null) {
 		var storedThumbnails = localStorage.getObject("thumbnails");
@@ -202,15 +196,24 @@ function removeThumbnail(evt) {
 		localStorage.setObject("thumbnails", storedThumbnails);
 	}
 	
-	/*
+	//Remove not needed cats
+	cats = [];
+	
 	shuffleInstance.element.childNodes.forEach(function(child){
 		if(child.nodeType != 3 && child.nodeType != 8){
 			/\[(.*?)\]/g.exec(child.getAttribute("data-groups"))[1]
 				.split(",")
-				.map((item) => currentCats.indexOf(/"(.+)"$/g.exec(item)[1]) === -1 ? 
-											(console.log(/"(.+)"$/g.exec(item)[1])):"");
+				.map((item) => cats.push(/"(.+)"$/g.exec(item)[1]));
 		}
-	});*/
+	});
+		
+	var checkBoxes = document.querySelectorAll("#filterContainer input[type=checkbox]");
+	
+	checkBoxes.forEach(function(child){
+		if (!cats.includes(child.getAttribute("value"))) {
+			child.parentNode.parentNode.removeChild(child.parentNode);
+		}
+	});
 }
 
 // Filter the shuffle instance by items with a title that matches the search input.
