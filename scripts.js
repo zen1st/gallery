@@ -202,7 +202,7 @@ function removeThumbnail(evt) {
 		localStorage.setObject("thumbnails", storedThumbnails);
 	}
 	
-		
+	/*
 	shuffleInstance.element.childNodes.forEach(function(child){
 		if(child.nodeType != 3 && child.nodeType != 8){
 			/\[(.*?)\]/g.exec(child.getAttribute("data-groups"))[1]
@@ -210,7 +210,7 @@ function removeThumbnail(evt) {
 				.map((item) => currentCats.indexOf(/"(.+)"$/g.exec(item)[1]) === -1 ? 
 											(console.log(/"(.+)"$/g.exec(item)[1])):"");
 		}
-	});
+	});*/
 }
 
 // Filter the shuffle instance by items with a title that matches the search input.
