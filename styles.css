@@ -246,6 +246,7 @@ h1 {
 
 .column .imgContent{
 	height: 200px !important;
+	overflow:hidden;
 }
 
 /* Responsive layout - makes a two column-layout instead of four columns */
